@@ -485,19 +485,19 @@ do
 	function api.Animate(obj, props, t, style, priority)
 		if TYPE_ASSERTS then
 			if type(obj) ~= 'userdata' or type(obj) ~= 'table' then
-				error(('bad argument #1 to AnimateAsync: expected userdata, got %s'):format(type(obj)), 2)
+				error(('bad argument #1 to Animate: expected userdata, got %s'):format(type(obj)), 2)
 			end
 			if type(props) ~= 'table' then
-				error(('bad argument #2 to AnimateAsync: expected table, got %s'):format(type(props)), 2)
+				error(('bad argument #2 to Animate: expected table, got %s'):format(type(props)), 2)
 			end
 			if type(t) ~= 'number' then
-				error(('bad argument #3 to AnimateAsync: expected number, got %s'):format(type(t)), 2)
+				error(('bad argument #3 to Animate: expected number, got %s'):format(type(t)), 2)
 			end
 			if type(style) ~= 'string' then
-				error(('bad argument #4 to AnimateAsync: expected string, got %s'):format(type(style)), 2)
+				error(('bad argument #4 to Animate: expected string, got %s'):format(type(style)), 2)
 			end
 			if priority and type(priority) ~= 'number' then
-				error(('bad argument #5 to AnimateAsync: expected number, got %s'):format(type(priority)), 2)
+				error(('bad argument #5 to Animate: expected number, got %s'):format(type(priority)), 2)
 			end
 		end
 		return Interpolate(obj, props, t, t and easingStyles[style], priority or DEFAULT_PRIORITY)
