@@ -679,7 +679,7 @@ do
 
 		function easingStyles.inOutElastic(t)
 			if t < 0.5 then
-				return (exp(g*(2*hScale*t - 1))*hScale*t*sin(2*h*hScale*t))/vScale
+				return (exp(g*(2*hScale*t - 1))*hScale*t*sin(2*h*hScale*t))*vScale
 			else
 				return 1 + (exp(g*(-1 - 2*hScale*(t - 1)))*hScale*(-1 + t)*sin(h*hScale*(2 - 2*t)))*vScale
 			end
