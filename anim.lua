@@ -245,7 +245,7 @@ do
 			function typeDispatch.NumberSequenceKeypoint(v0, v1)
 				local t0, v0, e0 = v0.Time, v0.Value, v0.Envelope
 				local dt, dv, de = v1.Time - t0, v1.Value - v0, v1.Envelope - e0
-				v0, v1 = nil, nil
+				v1 = nil
 				return function(t)
 					return NSK(t0 + t*dt, v0 + t*dv, e0 + t*de)
 				end
