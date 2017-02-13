@@ -6,18 +6,18 @@
 -- Copyright 2017 Parker Stebbins <parker@fractality.io>
 --
 -- Permission is hereby granted, free of charge, to any person obtaining a copy of this software
--- and associated documentation files (the "Software"), to deal in the Software without 
--- restriction, including without limitation the rights to use, copy, modify, merge, publish, 
--- distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the 
+-- and associated documentation files (the "Software"), to deal in the Software without
+-- restriction, including without limitation the rights to use, copy, modify, merge, publish,
+-- distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
 -- Software is furnished to do so, subject to the following conditions:
--- 
--- The above copyright notice and this permission notice shall be included in all copies or 
+--
+-- The above copyright notice and this permission notice shall be included in all copies or
 -- substantial portions of the Software.
--- 
--- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
--- BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
--- NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
--- DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+-- BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+-- NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+-- DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 --
 --
@@ -139,9 +139,9 @@ do
 					local fs = (n0 + d*t)%86400
 					local s = fs < 0 and -fs or fs
 					return s_fmt(
-						fs < 0 and '-%.2u:%.2u:%.2u' or '%.2u:%.2u:%.2u', 
-						(s - s%3600)/3600, 
-						(s%3600 - s%60)/60, 
+						fs < 0 and '-%.2u:%.2u:%.2u' or '%.2u:%.2u:%.2u',
+						(s - s%3600)/3600,
+						(s%3600 - s%60)/60,
 						s%60
 					)
 				end
@@ -239,7 +239,7 @@ do
 				end
 			end
 		end
-		
+
 		do -- NumberSequenceKeypoint
 			local NSK = NumberSequenceKeypoint.new
 			function typeDispatch.NumberSequenceKeypoint(v0, v1)
@@ -255,14 +255,14 @@ do
 		do -- PhysicalProperties
 			local PP = PhysicalProperties.new
 			function typeDispatch.PhysicalProperties(v0, v1)
-				local d0, e0, ew0, f0, fw0 = 
-					v0.Density, 
-					v0.Elasticity, 
-					v0.ElasticityWeight, 
-					v0.Friction, 
+				local d0, e0, ew0, f0, fw0 =
+					v0.Density,
+					v0.Elasticity,
+					v0.ElasticityWeight,
+					v0.Friction,
 					v0.FrictionWeight
-				local dd, de, dew, df, dfw = 
-					v1.Density - d0, 
+				local dd, de, dew, df, dfw =
+					v1.Density - d0,
 					v1.Elasticity - e0,
 					v1.ElasticityWeight - ew0,
 					v1.Friction - f0,
@@ -278,20 +278,20 @@ do
 			local R = Ray.new
 			local V3 = Vector3.new
 			function typeDispatch.Ray(v0, v1)
-				local o0, d0, o1, d1 = 
-					v0.Origin, v0.Direction, 
+				local o0, d0, o1, d1 =
+					v0.Origin, v0.Direction,
 					v1.Origin, v1.Direction
-				local ox0, oy0, oz0, dx0, dy0, dz0, dx1, dy1, dz1 = 
-					o0.x, o0.y, o0.z, 
-					d0.x, d0.y, d0.z, 
+				local ox0, oy0, oz0, dx0, dy0, dz0, dx1, dy1, dz1 =
+					o0.x, o0.y, o0.z,
+					d0.x, d0.y, d0.z,
 					d1.x, d1.y, d1.z
-				local dox, doy, doz, ddx, ddy, ddz = 
-					o1.x - ox0, o1.y - oy0, o1.z - oz0, 
+				local dox, doy, doz, ddx, ddy, ddz =
+					o1.x - ox0, o1.y - oy0, o1.z - oz0,
 					d1.x - dx0, d1.y - dy0, d1.z - dz0
 				v0, v1, o0, d0, o1, d1 = nil, nil, nil, nil, nil, nil
 				return function(t)
 					return R(
-						V3(ox0 + t*dox, oy0 + t*doy, oz0 + t*doz), 
+						V3(ox0 + t*dox, oy0 + t*doy, oz0 + t*doz),
 						V3(dx0 + t*ddx, dy0 + t*ddy, dz0 + t*ddz)
 					)
 				end
@@ -344,10 +344,10 @@ do
 		end
 	end
 
+	local vlock = {} -- semaphore record
+	local plock = {} -- priority record
+
 	local Interpolate do
-		local vlock = {} -- semaphore record
-		local plock = {} -- priority record
-		
 		local RunService = game:GetService'RunService'
 		local step = (RunService:IsServer() and not RunService:IsClient()) and RunService.Heartbeat or RunService.RenderStepped
 		local Await = step.wait
@@ -401,14 +401,14 @@ do
 						excludeMap = {}
 						vlock[prop] = excludeMap
 					end
-					local mv, typeLerp = 
-						((excludeMap[obj] or 0) + 1)%2^53, 
+					local mv, typeLerp =
+						((excludeMap[obj] or 0) + 1)%2^53,
 						typeDispatch[typeof(val)](obj[prop], val)
-					mxkeys[prop], excludeMap[obj], priMap[prop], flerps[prop], obj[prop] = 
-						mv, 
-						mv, 
-						priority, 
-						typeLerp, 
+					mxkeys[prop], excludeMap[obj], priMap[prop], flerps[prop], obj[prop] =
+						mv,
+						mv,
+						priority,
+						typeLerp,
 						typeLerp(x)
 				end
 			end
@@ -429,7 +429,7 @@ do
 			end
 			for prop, val in next, flerps do
 				local mx = vlock[prop]
-				obj[prop], mx[obj], priMap[prop] = 
+				obj[prop], mx[obj], priMap[prop] =
 					props[prop], nil, nil
 			end
 			if not next(priMap) then
@@ -442,7 +442,60 @@ do
 		end
 	end
 
+	local c_wrap = coroutine.wrap
+	local chktype
+	if TYPE_ASSERTS then
+		local type = type
+		local select = select
+
+		local function GetCallerName(lvl)
+			local f = debug.traceback():gmatch'Script \'.-\', Line %d+ %- [globacupvefidmth]+ ([_%a][_%w]*)\n'
+			for _ = 1, lvl or 1 do
+				f()
+			end
+			return f()
+		end
+
+		function chktype(argno, dat, ...)
+			local tl = {...}
+			local td = type(dat)
+			local er = true
+			for i = 1, select('#', ...) do
+				er = er and (tl[i] ~= td)
+			end
+			if er then
+				error(('bad argument #%u to %s (%s expected, got %s)'):format(argno, GetCallerName(2), table.concat(tl, ' or '), td), 3)
+			end
+		end
+	end
+
+	function api.Animate(obj, props, time, style, priority)
+		if TYPE_ASSERTS then
+			chktype(1, obj, 'userdata', 'table')
+			chktype(2, props, 'table')
+			chktype(3, time, 'nil', 'number')
+			chktype(4, style, 'nil', 'string')
+			chktype(5, priority, 'nil', 'number')
+		end
+		return Interpolate(obj, props, time, time and easingStyles[style], priority or DEFAULT_PRIORITY)
+	end
+
+	function api.AnimateAsync(obj, props, time, style, priority, Callback)
+		if TYPE_ASSERTS then
+			chktype(1, obj, 'userdata', 'table')
+			chktype(2, props, 'table')
+			chktype(3, time, 'nil', 'number')
+			chktype(4, style, 'nil', 'string')
+			chktype(5, priority, 'nil', 'number')
+			chktype(6, Callback, 'nil', 'function')
+		end
+		return c_wrap(Interpolate)(obj, props, time, time and easingStyles[style], priority or DEFAULT_PRIORITY, Callback)
+	end
+
 	function api.Interrupt(obj)
+		if TYPE_ASSERTS then
+			chktype(1, obj, 'nil', 'userdata', 'table')
+		end
 		for _, s in next, vlock do
 			if not obj or s[obj] then
 				s[obj] = nil
@@ -453,54 +506,6 @@ do
 		else
 			plock = {}
 		end
-	end
-
-	local type = type
-	local c_wrap = coroutine.wrap
-
-	function api.AnimateAsync(obj, props, t, style, priority, Callback)
-		if TYPE_ASSERTS then
-			if type(obj) ~= 'userdata' or type(obj) ~= 'table' then
-				error(('bad argument #1 to AnimateAsync: expected userdata, got %s'):format(type(obj)), 2)
-			end
-			if type(props) ~= 'table' then
-				error(('bad argument #2 to AnimateAsync: expected table, got %s'):format(type(props)), 2)
-			end
-			if type(t) ~= 'number' then
-				error(('bad argument #3 to AnimateAsync: expected number, got %s'):format(type(t)), 2)
-			end
-			if type(style) ~= 'string' then
-				error(('bad argument #4 to AnimateAsync: expected string, got %s'):format(type(style)), 2)
-			end
-			if priority and type(priority) ~= 'number' then
-				error(('bad argument #5 to AnimateAsync: expected number, got %s'):format(type(priority)), 2)
-			end
-			if Callback and type(Callback) ~= 'function' then
-				error(('bad argument #6 to AnimateAsync: expected function, got %s'):format(type(Callback)), 2)
-			end
-		end
-		return c_wrap(Interpolate)(obj, props, t, t and easingStyles[style], priority or DEFAULT_PRIORITY, Callback)
-	end
-
-	function api.Animate(obj, props, t, style, priority)
-		if TYPE_ASSERTS then
-			if type(obj) ~= 'userdata' or type(obj) ~= 'table' then
-				error(('bad argument #1 to Animate: expected userdata, got %s'):format(type(obj)), 2)
-			end
-			if type(props) ~= 'table' then
-				error(('bad argument #2 to Animate: expected table, got %s'):format(type(props)), 2)
-			end
-			if type(t) ~= 'number' then
-				error(('bad argument #3 to Animate: expected number, got %s'):format(type(t)), 2)
-			end
-			if type(style) ~= 'string' then
-				error(('bad argument #4 to Animate: expected string, got %s'):format(type(style)), 2)
-			end
-			if priority and type(priority) ~= 'number' then
-				error(('bad argument #5 to Animate: expected number, got %s'):format(type(priority)), 2)
-			end
-		end
-		return Interpolate(obj, props, t, t and easingStyles[style], priority or DEFAULT_PRIORITY)
 	end
 end
 
@@ -663,7 +668,7 @@ do
 			local prev, i, x = 0, 0, 1
 			repeat
 				local s, c, h2, xg = sin(h*x), cos(h*x), h*h, x*g
-				prev, i, x = x, i + 1, 
+				prev, i, x = x, i + 1,
 					x + (2*h*(1 + xg)*c + (g*(2 + xg) - h2*x)*s)/(h*(h2*x - 3*g*(2 + xg))*c + (3*h2*(1 + xg) - g*g*(3 + xg))*s)
 			until x >= prev or i > 63
 			hScale, vScale = x, 1/(exp((x - 1)*g)*x*sin(h*x))
@@ -672,7 +677,7 @@ do
 		function easingStyles.inElastic(t)
 			return exp((t*hScale - 1)*g)*t*hScale*sin(h*t*hScale)*vScale
 		end
-	
+
 		function easingStyles.outElastic(t)
 			return 1 + (exp(g*(hScale - hScale*t - 1))*hScale*(t - 1)*sin(h*hScale*(1 - t)))*vScale
 		end
