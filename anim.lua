@@ -713,7 +713,7 @@ do
 
 	setmetatable(easingStyles, {
 		__index = function(t, k)
-			error(tostring(k) .. ' is not a valid easing style.', 2)
+			error('Unknown easing style: \'' .. tostring(k) .. '\'', 3)
 		end;
 	})
 end
