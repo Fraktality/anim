@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------
 --
--- A module for animating Roblox datatypes
+-- A module for tweening Roblox datatypes.
 --
 --
 -- Copyright 2017 Parker Stebbins <parker@fractality.io>
@@ -23,7 +23,6 @@
 --
 -- API ------------------------------------------------------------------
 --
---
 -- Animate(Instance obj, dictionary<string, Variant> plist, double time, string style, int priority = 0)
 -- | @brief Animates properties of obj to the given values.
 -- | @param obj       The object to animate.
@@ -32,13 +31,9 @@
 -- | @param style     Name of an easing style.
 -- | @param priority  The priority of the animation. New animations will only interrupt running animations of lower or equal priority.
 --
---
---
 -- AnimateAsync(Instance obj, dictionary<string, Variant> plist, double time, string style, int priority=0[, function callback()])
 -- | @brief Non-blocking equivalent of Animate.
 -- | @param callback  A callback function to run after the animation stops.
---
---
 --
 -- bool Interrupt(Instance obj[, int priority])
 -- | @brief Stop the animation (if any) acting on this object.
@@ -47,7 +42,6 @@
 --
 --
 -- Easing styles --------------------------------------------------------
---
 --
 -- | linear    |
 -- | inQuad    | outQuad    | inOutQuad    |
@@ -61,7 +55,6 @@
 -- in:    start slow and speed up
 -- out:   start fast and slow down
 -- inOut: start slow, speed up, then slow down
---
 --
 --[[ Usage example ------------------------------------------------------
 
@@ -118,7 +111,7 @@ do
 
 		do -- string
 			local s_match = string.match
-			local s_fmt = string.format
+			local s_format = string.format
 			local atof = tonumber
 			function typeDispatch.string(v0, v1)
 				local n0, d do
@@ -137,8 +130,8 @@ do
 				end
 				return function(t)
 					local fs = (n0 + d*t)%86400
-					local s = fs < 0 and -fs or fs
-					return s_fmt(
+					local s = fs > 0 and fs or -fs
+					return s_format(
 						fs < 0 and '-%.2u:%.2u:%.2u' or '%.2u:%.2u:%.2u',
 						(s - s%3600)/3600,
 						(s%3600 - s%60)/60,
@@ -147,10 +140,6 @@ do
 				end
 			end
 		end
-
-		-- __add, __sub, and __mul must be defined for these to work
-		typeDispatch.table = typeDispatch.number
-		typeDispatch.userdata = typeDispatch.number
 
 		do -- CFrame
 			local Slerp = CFrame.new().lerp
@@ -164,54 +153,47 @@ do
 		do -- Color3
 			local C3 = Color3.new
 			local black = C3(0, 0, 0)
-			function typeDispatch.Color3(c0, c1)
-				local l0, u0, v0, dl, du, dv do
-					local r, g, b = c0.r, c0.g, c0.b
-					r, g, b = r < 4.04482363e-2 and r*(1/12.92) or 0.87941546140213*(r + 0.055)^2.4,
-					          g < 4.04482363e-2 and g*(1/12.92) or 0.87941546140213*(g + 0.055)^2.4,
-					          b < 4.04482363e-2 and b*(1/12.92) or 0.87941546140213*(b + 0.055)^2.4
-					local y, z = 0.2125862307855956*r + 0.71517030370341085*g + 0.0722004986433362*b,
-					             3.6590806972265883*r + 11.4426895800574232*g + 4.1149915024264843*b
-					l0 = y > 8.85645168e-3 and 116*y^(1/3) - 16 or 903.296296296296*y
-					if z > 0 then
-						u0, v0 = l0*(0.9257063972951867*r - 0.8333736323779866*g - 0.09209820666085898*b)/z,
-						         l0*(9*y/z - 0.46832)
-					else
-						u0, v0 = -0.19783*l0,
-						         -0.46832*l0
-					end
-					r, g, b = c1.r, c1.g, c1.b
-					r, g, b = r < 4.04482363e-2 and r*(1/12.92) or 0.87941546140213*(r + 0.055)^2.4,
-					          g < 4.04482363e-2 and g*(1/12.92) or 0.87941546140213*(g + 0.055)^2.4,
-					          b < 4.04482363e-2 and b*(1/12.92) or 0.87941546140213*(b + 0.055)^2.4
-					y, z = 0.2125862307855956*r + 0.71517030370341085*g + 0.0722004986433362*b,
-					       3.6590806972265883*r + 11.4426895800574232*g + 4.1149915024264843*b
-					dl = y > 8.85645168e-3 and 116*y^(1/3) - 16 or 903.296296296296*y
-					if z > 0 then
-						dl, du, dv = dl - l0,
-						             dl*(0.9257063972951867*r - 0.8333736323779866*g - 0.09209820666085898*b)/z - u0,
-						             dl*(9*y/z - 0.46832) - v0
-					else
-						dl, du, dv = dl - l0,
-						    -0.19783*dl - u0,
-						    -0.46832*dl - v0
-					end
+
+			local function RgbToLuv13(c)
+				local r, g, b = c.r, c.g, c.b
+				r = r < 0.0404482362771076 and r/12.92 or 0.87941546140213*(r + 0.055)^2.4
+				g = g < 0.0404482362771076 and g/12.92 or 0.87941546140213*(g + 0.055)^2.4
+				b = b < 0.0404482362771076 and b/12.92 or 0.87941546140213*(b + 0.055)^2.4
+				local y = 0.2125862307855956*r + 0.71517030370341085*g + 0.0722004986433362*b
+				local z = 3.6590806972265883*r + 11.4426895800574232*g + 4.1149915024264843*b
+				local l = y > 0.008856451679035631 and 116*y^(1/3) - 16 or 903.296296296296*y
+				if z > 1e-15 then
+					local x = 0.9257063972951867*r - 0.8333736323779866*g - 0.09209820666085898*b
+					return l, l*x/z, l*(9*y/z - 0.46832)
+				else
+					return l, -0.19783*l, -0.46832*l
 				end
+			end
+
+			function typeDispatch.Color3(c0, c1)
+				local l0, u0, v0 = RgbToLuv13(c0)
+				local l1, u1, v1 = RgbToLuv13(c1)
+
 				c0, c1 = nil, nil
+
 				return function(t)
-					local l = l0 + t*dl
+					local l = (1 - t)*l0 + t*l1
 					if l < 0.0197955 then
 						return black
 					end
-					local u, v = (u0 + t*du)/l + 0.19783,
-					             (v0 + t*dv)/l + 0.46832
-					local y = (l + 16)*(1/116)
-					y = y > 0.206896552 and y*y*y or 0.12841854934601665*y - 0.01771290335807126
-					local x, z = y*u/v,
-					             y*((3 - 0.75*u)/v - 5)
-					local r, g, b = 7.2914074*x - 1.5372080*y - 0.4986286*z,
-					                1.8757561*y - 2.1800940*x + 0.0415175*z,
-					                0.1253477*x - 0.2040211*y + 1.0569959*z
+
+					local u = ((1 - t)*u0 + t*u1)/l + 0.19783
+					local v = ((1 - t)*v0 + t*v1)/l + 0.46832
+
+					local y = (l + 16)/116
+					y = y > 0.206896551724137931 and y*y*y or 0.12841854934601665*y - 0.01771290335807126
+					local x = y*u/v
+					local z = y*((3 - 0.75*u)/v - 5)
+
+					local r =  7.2914074*x - 1.5372080*y - 0.4986286*z
+					local g = -2.1800940*x + 1.8757561*y + 0.0415175*z
+					local b =  0.1253477*x - 0.2040211*y + 1.0569959*z
+
 					if r < 0 and r < g and r < b then
 						r, g, b = 0, g - r, b - r
 					elseif g < 0 and g < b then
@@ -219,15 +201,15 @@ do
 					elseif b < 0 then
 						r, g, b = r - b, g - b, 0
 					end
+
 					return C3(
-						r < 3.13066844e-3 and 12.92*r or 1.055*r^(1/2.4) - 0.055,
-						g < 3.13066844e-3 and 12.92*g or 1.055*g^(1/2.4) - 0.055,
-						b < 3.13066844e-3 and 12.92*b or 1.055*b^(1/2.4) - 0.055
+						r < 3.1306684425e-3 and 12.92*r or 1.055*r^(1/2.4) - 0.055,
+						g < 3.1306684425e-3 and 12.92*g or 1.055*g^(1/2.4) - 0.055,
+						b < 3.1306684425e-3 and 12.92*b or 1.055*b^(1/2.4) - 0.055
 					)
 				end
 			end
 		end
-
 
 
 		do -- NumberRange
@@ -346,14 +328,19 @@ do
 		end
 	end
 
-	local vlock = {} -- semaphore record
+	local vlock = {} -- lock record
 	local plock = {} -- priority record
 
 	local Interpolate do
 		local RunService = game:GetService'RunService'
-		local step = (RunService:IsServer() and not RunService:IsClient()) and RunService.Heartbeat or RunService.RenderStepped
-		local Await = step.wait
-		local ninf = -math.huge
+		local step
+		if RunService:IsServer() and not RunService:IsClient() then
+			step = RunService.Heartbeat
+		else
+			step = RunService.RenderStepped
+		end
+
+		local Await = step.Wait
 		local next = next
 		local tick = tick
 		local typeof = typeof
@@ -362,19 +349,23 @@ do
 			local last = tick()
 			step:Connect(function()
 				local t = tick()
-				last, dtRender = t, dtRender + (1/3)*(t - last - dtRender)
+				last, dtRender = t, dtRender + (t - last - dtRender)/4
 			end)
 		end
 
 		function Interpolate(obj, props, t, Ease, priority, Callback)
 			local priMap = plock[obj]
+
 			if not t or t < dtRender then
 				for prop, val in next, props do
 					local overridenPriority = priMap and priMap[prop]
-					if (overridenPriority or ninf) <= priority then
-						local emap = vlock[prop]
-						if emap then
-							emap[obj] = nil
+					if (overridenPriority or -1/0) <= priority then
+						local excludeMap = vlock[prop]
+						if excludeMap then
+							local mv = excludeMap[obj]
+							if mv then
+								excludeMap[obj] = (mv + 1)%2^53
+							end
 						end
 						if overridenPriority then
 							priMap[prop] = nil
@@ -383,41 +374,46 @@ do
 					end
 				end
 				if Callback then
-					return Callback(nil)
+					return Callback()
 				end
-				return nil
+				return
+			elseif type(Ease) ~= 'function' then
+				Ease = easingStyles[Ease]
 			end
-			-- rendering a frame ahead of time
+
 			local t0 = tick() - dtRender
 			local x = Ease(dtRender/t)
-			local flerps, mxkeys, noscan = {}, {}, true
+			local flerps = {}
+			local mxkeys = {}
+			local noscan = true
+
 			if not priMap then
 				priMap = {}
 				noscan = false
 				plock[obj] = priMap
 			end
+
 			for prop, val in next, props do
-				if noscan or (priMap[prop] or ninf) <= priority then
+				if noscan or (priMap[prop] or -1/0) <= priority then
 					local excludeMap = vlock[prop]
 					if not excludeMap then
 						excludeMap = {}
 						vlock[prop] = excludeMap
 					end
-					local mv, typeLerp =
-						((excludeMap[obj] or 0) + 1)%2^53,
-						typeDispatch[typeof(val)](obj[prop], val)
-					mxkeys[prop], excludeMap[obj], priMap[prop], flerps[prop], obj[prop] =
-						mv,
-						mv,
-						priority,
-						typeLerp,
-						typeLerp(x)
+					local mv = ((excludeMap[obj] or 0) + 1)%2^53
+					local typeLerp = typeDispatch[typeof(val)](obj[prop], val)
+					mxkeys[prop] = mv
+					excludeMap[obj] = mv
+					priMap[prop] = priority
+					flerps[prop] = typeLerp
+					obj[prop] = typeLerp(x)
 				end
 			end
-			while true do -- hot loop
+
+			repeat
 				Await(step)
 				local elapsed = tick() - t0
-				if elapsed > t then
+				if elapsed >= t then
 					break
 				end
 				x = Ease(elapsed/t)
@@ -428,26 +424,28 @@ do
 						obj[prop] = Flerp(x)
 					end
 				end
-			end
+			until not next(flerps)
+
 			for prop, val in next, flerps do
 				local mx = vlock[prop]
-				obj[prop], mx[obj], priMap[prop] =
-					props[prop], nil, nil
+				obj[prop] = props[prop]
+				mx[obj] = nil
+				priMap[prop] = nil
 			end
 			if not next(priMap) then
 				plock[obj] = nil
 			end
 			if Callback then
-				return Callback(nil)
+				return Callback()
 			end
-			return nil
 		end
 	end
 
+	local type = type
 	local c_wrap = coroutine.wrap
+
 	local chktype
 	if TYPE_ASSERTS then
-		local type = type
 		local select = select
 
 		local function GetCallerName(lvl)
@@ -473,25 +471,25 @@ do
 
 	function api.Animate(obj, props, time, style, priority)
 		if TYPE_ASSERTS then
-			chktype(1, obj, 'userdata', 'table')
-			chktype(2, props, 'table')
-			chktype(3, time, 'nil', 'number')
-			chktype(4, style, 'nil', 'string')
+			chktype(1, obj,      'userdata', 'table')
+			chktype(2, props,    'table')
+			chktype(3, time,     'nil', 'number')
+			chktype(4, style,    'nil', 'string', 'function')
 			chktype(5, priority, 'nil', 'number')
 		end
-		return Interpolate(obj, props, time, time and easingStyles[style], priority or DEFAULT_PRIORITY)
+		return Interpolate(obj, props, time, style, priority or DEFAULT_PRIORITY)
 	end
 
 	function api.AnimateAsync(obj, props, time, style, priority, Callback)
 		if TYPE_ASSERTS then
-			chktype(1, obj, 'userdata', 'table')
-			chktype(2, props, 'table')
-			chktype(3, time, 'nil', 'number')
-			chktype(4, style, 'nil', 'string')
+			chktype(1, obj,      'userdata', 'table')
+			chktype(2, props,    'table')
+			chktype(3, time,     'nil', 'number')
+			chktype(4, style,    'nil', 'string', 'function')
 			chktype(5, priority, 'nil', 'number')
 			chktype(6, Callback, 'nil', 'function')
 		end
-		return c_wrap(Interpolate)(obj, props, time, time and easingStyles[style], priority or DEFAULT_PRIORITY, Callback)
+		return c_wrap(Interpolate)(obj, props, time, style, priority or DEFAULT_PRIORITY, Callback)
 	end
 
 	function api.Interrupt(obj)
@@ -649,9 +647,9 @@ do
 			if t > 7/11 then
 				return 1 - (t - 1)*(t - 1)*(121/16)
 			elseif t > 3/11 then
-				return (11*t - 7)*(11*t - 3)*(-1/16)
+				return (11*t - 7)*(11*t - 3)/-16
 			elseif t > 1/11 then
-				return (11*(4 - 11*t)*t - 3)*(1/16)
+				return (11*(4 - 11*t)*t - 3)/16
 			else
 				return t*(11*t - 1)*(-11/16)
 			end
@@ -659,19 +657,20 @@ do
 	end
 
 	do -- Elastic
-		local g = 2 -- Amplitude falloff
-		local h = 2 -- Number of peaks
+		local g = 8 -- Amplitude falloff
+		local h = 4 -- Number of peaks
 
-		-- Calculate a time multiplier, hScale, so that the derivative is continuous at the end of the wobble.
+		-- Calculate a time multiplier so that the derivative at the end of the wobble is zero.
 		-- Then, scale the output so that f(0)=1.
-		-- I can't find a closed-form solution for hScale, so here's an approximation.
 		local hScale, vScale do
 			h = pi*(2*h - 3/2)
-			local prev, i, x = 0, 0, 1
+			local i = 0
+			local prev = 0
+			local x = 1
 			repeat
-				local s, c, h2, xg = sin(h*x), cos(h*x), h*h, x*g
-				prev, i, x = x, i + 1,
-					x + (2*h*(1 + xg)*c + (g*(2 + xg) - h2*x)*s)/(h*(h2*x - 3*g*(2 + xg))*c + (3*h2*(1 + xg) - g*g*(3 + xg))*s)
+				local s, c = sin(h*x), cos(h*x)
+				prev, x = x, x + (2*h*(1 + x*g)*c + (g*(2 + x*g) - h*h*x)*s)/(h*(h*h*x - 3*g*(2 + x*g))*c + (3*h*h*(1 + x*g) - g*g*(3 + x*g))*s)
+				i = i + 1
 			until x >= prev or i > 63
 			hScale, vScale = x, 1/(exp((x - 1)*g)*x*sin(h*x))
 		end
@@ -688,7 +687,7 @@ do
 			if t < 0.5 then
 				return (exp(g*(2*hScale*t - 1))*hScale*t*sin(2*h*hScale*t))*vScale
 			else
-				return 1 + (exp(g*(-1 - 2*hScale*(t - 1)))*hScale*(-1 + t)*sin(h*hScale*(2 - 2*t)))*vScale
+				return 1 + (exp(g*(hScale*(2 - 2*t) - 1))*hScale*(t - 1)*sin(h*hScale*(2 - 2*t)))*vScale
 			end
 		end
 	end
@@ -715,7 +714,7 @@ do
 
 	setmetatable(easingStyles, {
 		__index = function(t, k)
-			error('Unknown easing style: \'' .. tostring(k) .. '\'', 3)
+			error(tostring(k) .. ' is not a valid easing style.', 2)
 		end;
 	})
 end
