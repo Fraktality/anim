@@ -113,6 +113,7 @@ do
 			local s_match = string.match
 			local s_format = string.format
 			local atof = tonumber
+
 			function typeDispatch.string(v0, v1)
 				local n0, d do
 					local sign0, h0, m0, s0 = s_match(v0, '^([+-]?)(%d*):[+-]?(%d*):[+-]?(%d*)$')
@@ -128,6 +129,7 @@ do
 						error('Invalid TimeOfDay string', 4)
 					end
 				end
+
 				return function(t)
 					local fs = (n0 + d*t)%86400
 					local s = fs > 0 and fs or -fs
@@ -151,6 +153,7 @@ do
 		end
 
 		do -- Color3
+			local clamp = math.clamp
 			local C3 = Color3.new
 			local black = C3(0, 0, 0)
 
@@ -203,9 +206,9 @@ do
 					end
 
 					return C3(
-						r < 3.1306684425e-3 and 12.92*r or 1.055*r^(1/2.4) - 0.055,
-						g < 3.1306684425e-3 and 12.92*g or 1.055*g^(1/2.4) - 0.055,
-						b < 3.1306684425e-3 and 12.92*b or 1.055*b^(1/2.4) - 0.055
+						clamp(r < 3.1306684425e-3 and 12.92*r or 1.055*r^(1/2.4) - 0.055, 0, 1),
+						clamp(g < 3.1306684425e-3 and 12.92*g or 1.055*g^(1/2.4) - 0.055, 0, 1),
+						clamp(b < 3.1306684425e-3 and 12.92*b or 1.055*b^(1/2.4) - 0.055, 0, 1)
 					)
 				end
 			end
